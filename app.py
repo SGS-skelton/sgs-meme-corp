@@ -10,23 +10,23 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # Connect to MySQL using environment variables
-host = os.getenv("DB_HOST")
-user = os.getenv("DB_USER")
-password = os.getenv("DB_PASSWORD")
-database = os.getenv("DB_NAME")
+host = os.getenv("DB_HOST", "localhost")  # Example: "db-name.render.com"
+user = os.getenv("DB_USER", "root")
+password = os.getenv("DB_PASS", "root")
+database = os.getenv("DB_NAME", "sgs_meme_corp")
 
 try:
     db = mysql.connector.connect(
-    host=host,  # ✅ Use the variable 'host' instead
-    user=user,
-    password=password,
-    database=database
+        host=host,
+        user=user,
+        password=password,
+        database=database
     )
     cursor = db.cursor()
-    print("✅ Database connection successful!")
+    print("✅ Database connected successfully!")
 except mysql.connector.Error as err:
     print(f"❌ Database connection failed: {err}")
-
+    db = None  # Prevents execution if connection fails
 # Home Page
 @app.route('/')
 def index():
