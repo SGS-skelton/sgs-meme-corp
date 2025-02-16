@@ -10,10 +10,10 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # Connect to MySQL using environment variables
-DB_HOST = os.getenv("DB_HOST")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
+host = os.getenv("DB_HOST")
+user = os.getenv("DB_USER")
+password = os.getenv("DB_PASSWORD")
+database = os.getenv("DB_NAME")
 
 try:
     db = mysql.connector.connect(
