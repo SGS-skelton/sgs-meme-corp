@@ -17,10 +17,10 @@ database = os.getenv("DB_NAME")
 
 try:
     db = mysql.connector.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME
+    host=host,  # ✅ Use the variable 'host' instead
+    user=user,
+    password=password,
+    database=database
     )
     cursor = db.cursor()
     print("✅ Database connection successful!")
