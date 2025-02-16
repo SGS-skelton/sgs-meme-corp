@@ -11,10 +11,10 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # Connect to MySQL
 db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="root",
-    database="sgs_meme_corp"
+    host=os.getenv("localhost"),
+    user=os.getenv("root"),
+    password=os.getenv("root"),
+    database=os.getenv("sgs_meme_corp")
 )
 cursor = db.cursor()
 
