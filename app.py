@@ -1,32 +1,40 @@
 from flask import Flask, request, render_template, send_from_directory, send_file, jsonify
-import mysql.connector
+from flask_sqlalchemy import SQLAlchemy
 import os
 
 app = Flask(__name__)
 
 # Ensure 'static/uploads' directory exists
 UPLOAD_FOLDER = "static/uploads"
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Connect to MySQL using environment variables
-host = os.getenv("DB_HOST", "localhost")  # Example: "db-name.render.com"
-user = os.getenv("DB_USER", "root")
-password = os.getenv("DB_PASS", "root")
-database = os.getenv("DB_NAME", "sgs_meme_corp")
+# Database Configuration
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASS = os.getenv("DB_PASS", "root")
+DB_HOST = os.getenv("DB_HOST", "localhost")  # Change for Railway
+DB_PORT = os.getenv("DB_PORT", "3306")  # Default MySQL Port
+DB_NAME = os.getenv("DB_NAME", "sgs_meme_corporation")
 
-try:
-    db = mysql.connector.connect(
-        host=host,
-        user=user,
-        password=password,
-        database=database
-    )
-    cursor = db.cursor()
-    print("✅ Database connected successfully!")
-except mysql.connector.Error as err:
-    print(f"❌ Database connection failed: {err}")
-    db = None  # Prevents execution if connection fails
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Initialize Database
+db = SQLAlchemy(app)
+
+# Define Thought Model
+class Thought(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    thought = db.Column(db.Text, nullable=False)
+    image = db.Column(db.String(255), nullable=True)
+    ip = db.Column(db.String(45), nullable=False)
+
+class IPAddress(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.String(45), nullable=False)
+
+with app.app_context():
+    db.create_all()  # Ensure tables exist
+
 # Home Page
 @app.route('/')
 def index():
@@ -47,9 +55,9 @@ def submit():
         image_path = image_filename  # Save path for database
 
     # Insert into database
-    cursor.execute("INSERT INTO thoughts (thought, image, ip) VALUES (%s, %s, %s)", 
-                   (thought, image_path, ip))
-    db.commit()
+    new_thought = Thought(thought=thought, image=image_path, ip=ip)
+    db.session.add(new_thought)
+    db.session.commit()
 
     return jsonify({"message": "Submitted Successfully!"})
 
@@ -57,8 +65,9 @@ def submit():
 @app.route('/capture-ip', methods=['POST'])
 def capture_ip():
     ip = request.json.get('ip')
-    cursor.execute("INSERT INTO ip_addresses (ip) VALUES (%s)", (ip,))
-    db.commit()
+    new_ip = IPAddress(ip=ip)
+    db.session.add(new_ip)
+    db.session.commit()
     return jsonify({"message": "IP Captured"}), 200
 
 # Download Meme Template (Multiple Templates in ZIP)
@@ -70,5 +79,7 @@ def download_templates():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
+
+# Run Flask
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)), debug=True)
