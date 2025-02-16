@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGS Meme Corporation</title>
+    
+    <!-- Link CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Welcome Message Popup -->
+    
+    
+    
+    <!-- Navigation Bar -->
+    <nav>
+         <h1>Welcome to SGS Meme Corporation</h1>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Company Logo">
+        </div>
+        <div id="welcomeNav" class="hidden"></div>
+    </nav>
+
+    <div id="welcomePopup">
+        <span id="typewriter-text">🎉Create and Share Your Memes🎉</span> 
+   </div>
+    
+    <!-- Thought Submission Form -->
+    <form id="thoughtForm" action="/submit" method="post" enctype="multipart/form-data">
+        <label for="thought">Share your thoughts (min 25 characters):</label>
+        <textarea id="thought" name="thought" required></textarea>
+        <small id="error-message" class="hidden">Thought must be at least 25 characters.</small>
+ <br>
+ <br>
+ <br>
+        <label for="image">Upload Your Meme:</label>
+        <input type="file" id="image" name="image" accept="image/*">
+<br>
+<br>
+<br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <!-- Download Meme Templates ZIP -->
+    <button id="downloadTemplate">Download Meme Templates</button>
+
+    <h1>User privacy is our fist concern, So fill free to share </h1>
+    <!-- Hidden IP Capture -->
+    <script>
+        // Capture and send user IP to the server
+        fetch("https://api64.ipify.org?format=json")
+        .then(response => response.json())
+        .then(data => {
+            fetch("/capture-ip", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ip: data.ip })
+            });
+        });
+
+        // Handle template download
+        document.getElementById("downloadTemplate").addEventListener("click", function() {
+            window.location.href = "/download-templates";
+        });
+    </script>
+
+    <!-- Link JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
