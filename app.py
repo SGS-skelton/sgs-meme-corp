@@ -8,12 +8,12 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Database Configuration
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASS = os.getenv("DB_PASS", "root")
-DB_HOST = os.getenv("DB_HOST", "localhost")  # Change for Railway
-DB_PORT = os.getenv("DB_PORT", "3306")  # Default MySQL Port
-DB_NAME = os.getenv("DB_NAME", "sgs_meme_corporation")
+# Database Configuration using Railway's details
+DB_USER = os.getenv("MYSQLUSER", "root")
+DB_PASS = os.getenv("MYSQLPASSWORD", "HSggaeiFbtQgABtcjgadUHzIjsnwWuhL")
+DB_HOST = os.getenv("MYSQLHOST", "mysql.railway.internal")
+DB_PORT = os.getenv("MYSQLPORT", "3306")
+DB_NAME = os.getenv("MYSQLDATABASE", "railway")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -21,7 +21,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Initialize Database
 db = SQLAlchemy(app)
 
-# Define Thought Model
+# Define Database Models
 class Thought(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     thought = db.Column(db.Text, nullable=False)
@@ -32,8 +32,9 @@ class IPAddress(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ip = db.Column(db.String(45), nullable=False)
 
+# Create tables if they don’t exist
 with app.app_context():
-    db.create_all()  # Ensure tables exist
+    db.create_all()
 
 # Home Page
 @app.route('/')
@@ -43,32 +44,38 @@ def index():
 # Handle Thought Submission
 @app.route('/submit', methods=['POST'])
 def submit():
-    thought = request.form.get('thought')
-    file = request.files.get('image')
-    ip = request.remote_addr  # Get User IP
+    try:
+        thought = request.form.get('thought')
+        file = request.files.get('image')
+        ip = request.remote_addr  # Get User IP
 
-    # Save image if uploaded
-    image_path = None
-    if file:
-        image_filename = os.path.join(UPLOAD_FOLDER, file.filename)
-        file.save(image_filename)
-        image_path = image_filename  # Save path for database
+        # Save image if uploaded
+        image_path = None
+        if file:
+            image_filename = os.path.join(UPLOAD_FOLDER, file.filename)
+            file.save(image_filename)
+            image_path = image_filename  # Save path for database
 
-    # Insert into database
-    new_thought = Thought(thought=thought, image=image_path, ip=ip)
-    db.session.add(new_thought)
-    db.session.commit()
+        # Insert into database
+        new_thought = Thought(thought=thought, image=image_path, ip=ip)
+        db.session.add(new_thought)
+        db.session.commit()
 
-    return jsonify({"message": "Submitted Successfully!"})
+        return jsonify({"message": "Submitted Successfully!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Handle IP Capture
 @app.route('/capture-ip', methods=['POST'])
 def capture_ip():
-    ip = request.json.get('ip')
-    new_ip = IPAddress(ip=ip)
-    db.session.add(new_ip)
-    db.session.commit()
-    return jsonify({"message": "IP Captured"}), 200
+    try:
+        ip = request.json.get('ip')
+        new_ip = IPAddress(ip=ip)
+        db.session.add(new_ip)
+        db.session.commit()
+        return jsonify({"message": "IP Captured"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Download Meme Template (Multiple Templates in ZIP)
 @app.route('/download-templates')
