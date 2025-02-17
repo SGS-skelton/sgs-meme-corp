@@ -1,0 +1,6 @@
+{
+    "deploy": {
+      "start": "python app.py"
+    }
+  }
+  
