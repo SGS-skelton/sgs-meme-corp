@@ -8,12 +8,15 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Database Configuration using Railway's details
-DB_USER = os.getenv("MYSQLUSER", "root")
-DB_PASS = os.getenv("MYSQLPASSWORD", "HSggaeiFbtQgABtcjgadUHzIjsnwWuhL")
-DB_HOST = os.getenv("MYSQLHOST", "mysql.railway.internal")
-DB_PORT = os.getenv("MYSQLPORT", "3306")
-DB_NAME = os.getenv("MYSQLDATABASE", "railway")
+# Database Configuration (Using Clever Cloud Environment Variables)
+DB_USER = os.getenv("uvsaujkjiicbbmuq")
+DB_PASS = os.getenv("xVqO7T9C0inxqO9ubuN7")
+DB_HOST = os.getenv("bks2jduno7avfl0er3f5-mysql.services.clever-cloud.com")
+DB_PORT = os.getenv("MYSQLPORT", "3306")  # Default MySQL Port
+DB_NAME = os.getenv("bks2jduno7avfl0er3f5")
+
+if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
+    raise ValueError("Missing required database environment variables!")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -89,4 +92,4 @@ def uploaded_file(filename):
 
 # Run Flask
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)), debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=True)
