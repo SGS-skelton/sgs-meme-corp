@@ -9,13 +9,18 @@ UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Database Configuration (Using Clever Cloud Environment Variables)
-DB_USER = os.getenv("DB_USER")  # Your Clever Cloud database username
-DB_PASS = os.getenv("DB_PASSWORD")  # Your Clever Cloud database password
-DB_HOST = os.getenv("DB_HOST")  # Your Clever Cloud database host
-DB_NAME = os.getenv("DB_NAME")  # Your Clever Cloud database name
+import os
+
+DB_USER = os.getenv("MYSQL_ADDON_USER")
+DB_PASS = os.getenv("MYSQL_ADDON_PASSWORD")
+DB_HOST = os.getenv("MYSQL_ADDON_HOST")
+DB_NAME = os.getenv("MYSQL_ADDON_DB")
+DB_PORT = "3306"  # Default MySQL Port for Clever Cloud
 
 if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
-    raise ValueError("Missing required database environment variables!")
+    raise ValueError(f"Missing database environment variables! Found: "
+                     f"DB_USER={DB_USER}, DB_PASS={'****' if DB_PASS else None}, "
+                     f"DB_HOST={DB_HOST}, DB_NAME={DB_NAME}")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
