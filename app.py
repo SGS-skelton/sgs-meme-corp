@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, send_from_directory, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import os
 
 app = Flask(__name__)
@@ -9,8 +10,6 @@ UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Database Configuration (Using Clever Cloud Environment Variables)
-import os
-
 DB_USER = os.getenv("MYSQL_ADDON_USER")
 DB_PASS = os.getenv("MYSQL_ADDON_PASSWORD")
 DB_HOST = os.getenv("MYSQL_ADDON_HOST")
@@ -18,15 +17,14 @@ DB_NAME = os.getenv("MYSQL_ADDON_DB")
 DB_PORT = "3306"  # Default MySQL Port for Clever Cloud
 
 if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
-    raise ValueError(f"Missing database environment variables! Found: "
-                     f"DB_USER={DB_USER}, DB_PASS={'****' if DB_PASS else None}, "
-                     f"DB_HOST={DB_HOST}, DB_NAME={DB_NAME}")
+    raise ValueError("Missing database environment variables! Check your configuration.")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Initialize Database
+# Initialize Database and Migrations
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 # Define Database Models
 class Thought(db.Model):
@@ -38,10 +36,6 @@ class Thought(db.Model):
 class IPAddress(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ip = db.Column(db.String(45), nullable=False)
-
-# Create tables if they don’t exist
-with app.app_context():
-    db.create_all()
 
 # Home Page
 @app.route('/')
