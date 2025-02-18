@@ -88,6 +88,8 @@ def download_templates():
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
-# Run Flask
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=True)
+
+# Ensure uWSGI can detect the app
+application = app  # <- Add this line for uWSGI compatibility
