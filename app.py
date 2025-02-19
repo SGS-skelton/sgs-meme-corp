@@ -7,8 +7,11 @@ import os
 app = Flask(__name__, template_folder="templates")
 
 # Ensure 'static/uploads' directory exists
-UPLOAD_FOLDER = os.path.join("static", "uploads")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+UPLOAD_FOLDER = os.path.join(os.getcwd(), "static", "uploads")
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Database Configuration (Using Clever Cloud Environment Variables)
 DB_USER = os.getenv("MYSQL_ADDON_USER")
