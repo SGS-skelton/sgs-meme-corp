@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
 
-app = Flask(__name__)
+app = Flask(__name__,template_folder="templates")
 
 # Ensure 'static/uploads' directory exists
 UPLOAD_FOLDER = "static/uploads"
