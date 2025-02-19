@@ -3,10 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
 
-app = Flask(__name__,template_folder="templates")
+# Initialize Flask App
+app = Flask(__name__, template_folder="templates")
 
 # Ensure 'static/uploads' directory exists
-UPLOAD_FOLDER = "static/uploads"
+UPLOAD_FOLDER = os.path.join("static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Database Configuration (Using Clever Cloud Environment Variables)
@@ -16,10 +17,14 @@ DB_HOST = os.getenv("MYSQL_ADDON_HOST")
 DB_NAME = os.getenv("MYSQL_ADDON_DB")
 DB_PORT = "3306"  # Default MySQL Port for Clever Cloud
 
+# Ensure all database environment variables exist
 if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
     raise ValueError("Missing database environment variables! Check your configuration.")
 
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# Set up database URI
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize Database and Migrations
@@ -38,24 +43,23 @@ class IPAddress(db.Model):
     ip = db.Column(db.String(45), nullable=False)
 
 # Home Page
-@app.route('/')
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
 # Handle Thought Submission
-@app.route('/submit', methods=['POST'])
+@app.route("/submit", methods=["POST"])
 def submit():
     try:
-        thought = request.form.get('thought')
-        file = request.files.get('image')
+        thought = request.form.get("thought")
+        file = request.files.get("image")
         ip = request.remote_addr  # Get User IP
 
-        # Save image if uploaded
         image_path = None
         if file:
             image_filename = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(image_filename)
-            image_path = image_filename  # Save path for database
+            image_path = os.path.join("static", "uploads", file.filename)  # Relative path
 
         # Insert into database
         new_thought = Thought(thought=thought, image=image_path, ip=ip)
@@ -67,10 +71,10 @@ def submit():
         return jsonify({"error": str(e)}), 500
 
 # Handle IP Capture
-@app.route('/capture-ip', methods=['POST'])
+@app.route("/capture-ip", methods=["POST"])
 def capture_ip():
     try:
-        ip = request.json.get('ip')
+        ip = request.json.get("ip")
         new_ip = IPAddress(ip=ip)
         db.session.add(new_ip)
         db.session.commit()
@@ -78,18 +82,15 @@ def capture_ip():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Download Meme Template (Multiple Templates in ZIP)
-@app.route('/download-templates')
+# Download Meme Template (ZIP File)
+@app.route("/download-templates")
 def download_templates():
     return send_file("static/meme_templates.zip", as_attachment=True)
 
 # Serve Uploaded Images
-@app.route('/uploads/<filename>')
+@app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=True)
-
-# Ensure uWSGI can detect the app
-application = app  # <- Add this line for uWSGI compatibility
